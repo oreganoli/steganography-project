@@ -73,21 +73,25 @@ public class LosslessStegano
         }
         var columns = img.Width / 2;
         var rows = img.Height / 2;
-        if (message.Length > columns * rows)
+        var msg = new byte[4 + message.Length];
+        // Prepend the message's length to itself so we can know when to stop reading when decoding.
+        Buffer.BlockCopy(BitConverter.GetBytes(message.Length), 0, msg, 0, 4);
+        Buffer.BlockCopy(message, 0, msg, 4, message.Length);
+        if (msg.Length > columns * rows)
         {
             throw new ImageTooSmallException(message.Length, img.Width);
         }
-        columns = Math.Min(img.Width / 2, message.Length);
-        rows = message.Length / columns;
+        columns = Math.Min(img.Width / 2, msg.Length);
+        rows = msg.Length / columns;
         img.ProcessPixelRows(accessor =>
         {
             for (var row = 0; row < rows; row++)
             {
-                for (var col = 0; col < columns && row + col < message.Length; col++)
+                for (var col = 0; col < columns && row + col < msg.Length; col++)
                 {
                     var upper = accessor.GetRowSpan(row);
                     var lower = accessor.GetRowSpan(row + 1);
-                    WriteByteToChunk(upper, lower, col, message[row + col]);
+                    WriteByteToChunk(upper, lower, col, msg[row + col]);
                 }
             }
         });
