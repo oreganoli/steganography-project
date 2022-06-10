@@ -73,7 +73,7 @@ public class LosslessStegano
         var sixtyFours = (byte)Math.Abs(upperL.R - lowerL.R);
         var sixteens = (byte)Math.Abs(upperL.G - lowerL.G);
         var fours = (byte)Math.Abs(upperL.B - lowerL.B);
-        var ones = (byte)Math.Abs(upperR.R - upperL.R);
+        var ones = (byte)Math.Abs(upperR.R - lowerR.R);
         #region obfuscation
         /* As cryptographers, we want our users to have plausible deniability.
         Therefore, attackers should not be able to easily find out
