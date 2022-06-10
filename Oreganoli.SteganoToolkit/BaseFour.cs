@@ -24,6 +24,10 @@ public class BaseFour
 
     public BaseFour(byte sixtyFours, byte sixteens, byte fours, byte ones)
     {
+        if (sixtyFours > 3 || sixteens > 3 || fours > 3 || ones > 3)
+        {
+            throw new ImproperBaseFourException(sixtyFours, sixteens, fours, ones);
+        }
         SixtyFours = sixtyFours;
         Sixteens = sixteens;
         Fours = fours;
@@ -38,4 +42,19 @@ public class BaseFour
     {
         return $"({SixtyFours}, {Sixteens}, {Fours}, {Ones}) (= {AsByte()})";
     }
+}
+
+public class ImproperBaseFourException : ApplicationException
+{
+    private byte sixtyFours, sixteens, fours, ones;
+
+    public ImproperBaseFourException(byte sixtyFours, byte sixteens, byte fours, byte ones)
+    {
+        this.sixtyFours = sixtyFours;
+        this.sixteens = sixteens;
+        this.fours = fours;
+        this.ones = ones;
+    }
+
+    public override string Message => $"The number ({sixtyFours}, {sixteens}, {fours}, {ones}) is not a proper base-four number.";
 }

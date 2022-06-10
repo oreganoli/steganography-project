@@ -64,6 +64,18 @@ public class LosslessStegano
         lower[index * 2] = upperL;
         lower[index * 2 + 1] = upperR;
     }
+    private static byte ReadByteFromChunk(Span<Rgba32> upper, Span<Rgba32> lower, int index)
+    {
+        var upperL = upper[index * 2];
+        var upperR = upper[index * 2 + 1];
+        var lowerL = lower[index * 2];
+        var lowerR = lower[index * 2 + 1];
+        var sixtyFours = (byte)Math.Abs(upperL.R - lowerL.R);
+        var sixteens = (byte)Math.Abs(upperL.G - lowerL.G);
+        var fours = (byte)Math.Abs(upperL.B - lowerL.B);
+        var ones = (byte)Math.Abs(upperR.R - upperL.R);
+        return new BaseFour(sixtyFours, sixteens, fours, ones).AsByte();
+    }
     public static void Encode(Stream input, Stream output, byte[] message, out IImageFormat format)
     {
         var img = Image.Load<Rgba32>(input, out format);
