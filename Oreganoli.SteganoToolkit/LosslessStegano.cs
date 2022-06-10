@@ -8,12 +8,16 @@ namespace Oreganoli.SteganoToolkit;
 /// </summary>
 public class LosslessStegano
 {
-    public static void Encode(Stream input, Stream output, out IImageFormat format)
+    public static void Encode(Stream input, Stream output, byte[] message, out IImageFormat format)
     {
         var img = Image.Load(input, out format);
         if (format.Name == "JPEG" || format.Name == "GIF")
         {
-            throw new FormatException($"The {format.Name} format is not supported for lossless-format steganography.");
+            throw new UnsupportedImageFormatException(format.Name);
+        }
+        if (message.Length * 2 > img.Width)
+        {
+            throw new ImageTooSmallException(message.Length, img.Width);
         }
     }
 }
