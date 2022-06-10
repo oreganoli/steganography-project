@@ -6,14 +6,14 @@ namespace Oreganoli.SteganoToolkit;
 /// </summary>
 public static class JpegStegano
 {
-    public static void Encode(Stream s, byte[] message)
+    public static void Encode(Stream input, Stream output, byte[] message)
     {
-        s.Seek(0, SeekOrigin.End);
-        s.Write(message);
+        input.CopyTo(output);
+        output.Write(message, 0, message.Length);
         // Write the length of the message upfront at the last 4 bytes of the file.
         var msgLen = BitConverter.GetBytes(message.Length);
-        s.Write(msgLen);
-        s.Flush();
+        output.Write(msgLen);
+        output.Flush();
     }
 
     public static byte[] Decode(Stream s)
