@@ -21,6 +21,15 @@ public class BaseFour
         Fours = (byte)((from % 16 - from % 4) / 4);
         Ones = (byte)((from % 4));
     }
+
+    public BaseFour(byte sixtyFours, byte sixteens, byte fours, byte ones)
+    {
+        SixtyFours = sixtyFours;
+        Sixteens = sixteens;
+        Fours = fours;
+        Ones = ones;
+    }
+
     public byte AsByte()
     {
         return (byte)(SixtyFours * 64 + Sixteens * 16 + Fours * 4 + Ones);
