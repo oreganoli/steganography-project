@@ -4,10 +4,10 @@ namespace Oreganoli.SteganoToolkit;
 
 public class BaseFour
 {
-    private byte SixtyFours { get; }
-    private byte Sixteens { get; }
-    private byte Fours { get; }
-    private byte Ones { get; }
+    public byte SixtyFours { get; }
+    public byte Sixteens { get; }
+    public byte Fours { get; }
+    public byte Ones { get; }
 
     /// <summary>
     /// Breaks down a byte into its base-4 representation.
