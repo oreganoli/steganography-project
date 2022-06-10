@@ -9,6 +9,61 @@ namespace Oreganoli.SteganoToolkit;
 /// </summary>
 public class LosslessStegano
 {
+    /// <summary>
+    /// Writes a byte as a base-four representation to a 2x2 chunk in a pair of ImageSharp image rows.
+    /// </summary>
+    /// <param name="upper"></param>
+    /// <param name="lower"></param>
+    /// <param name="index"></param>
+    /// <param name="value"></param>
+    private static void WriteByteToChunk(Span<Rgba32> upper, Span<Rgba32> lower, int index, byte value)
+    {
+        if (upper.Length < 2 * (index + 1) || lower.Length < 2 * (index + 1))
+        {
+            throw new ArgumentException($"Provided an upper or lower row too short for an index of {index}");
+        }
+        var base4 = new BaseFour(value);
+        var upperL = upper[index * 2];
+        var upperR = upper[index * 2 + 1];
+
+        #region Decrementation
+        if (upperL.R - base4.SixtyFours < 0)
+        {
+            upperL.R += base4.SixtyFours;
+        }
+        else
+        {
+            upperL.R -= base4.SixtyFours;
+        }
+        if (upperL.G - base4.Sixteens < 0)
+        {
+            upperL.G += base4.Sixteens;
+        }
+        else
+        {
+            upperL.G -= base4.Sixteens;
+        }
+        if (upperL.B - base4.Fours < 0)
+        {
+            upperL.B += base4.Fours;
+        }
+        else
+        {
+            upperL.B -= base4.Fours;
+        }
+        if (upperR.R - base4.Ones < 0)
+        {
+            upperR.R += base4.Ones;
+        }
+        else
+        {
+            upperR.R -= base4.Ones;
+        }
+        #endregion
+
+        lower[index * 2] = upperL;
+        lower[index * 2 + 1] = upperR;
+    }
     public static void Encode(Stream input, Stream output, byte[] message, out IImageFormat format)
     {
         var img = Image.Load<Rgba32>(input, out format);
@@ -32,47 +87,7 @@ public class LosslessStegano
                 {
                     var upper = accessor.GetRowSpan(row);
                     var lower = accessor.GetRowSpan(row + 1);
-                    var base4 = new BaseFour(message[row + col]);
-                    var upperL = upper[(row + col) * 2];
-                    var upperR = upper[(row + col) * 2 + 1];
-
-                    #region Decrementation
-                    if (upperL.R - base4.SixtyFours < 0)
-                    {
-                        upperL.R += base4.SixtyFours;
-                    }
-                    else
-                    {
-                        upperL.R -= base4.SixtyFours;
-                    }
-                    if (upperL.G - base4.Sixteens < 0)
-                    {
-                        upperL.G += base4.Sixteens;
-                    }
-                    else
-                    {
-                        upperL.G -= base4.Sixteens;
-                    }
-                    if (upperL.B - base4.Fours < 0)
-                    {
-                        upperL.B += base4.Fours;
-                    }
-                    else
-                    {
-                        upperL.B -= base4.Fours;
-                    }
-                    if (upperR.R - base4.Ones < 0)
-                    {
-                        upperR.R += base4.Ones;
-                    }
-                    else
-                    {
-                        upperR.R -= base4.Ones;
-                    }
-                    #endregion
-
-                    lower[(row + col) * 2] = upperL;
-                    lower[(row + col) * 2 + 1] = upperR;
+                    WriteByteToChunk(upper, lower, col, message[row + col]);
                 }
             }
         });
