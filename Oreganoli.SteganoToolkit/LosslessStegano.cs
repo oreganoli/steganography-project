@@ -60,9 +60,10 @@ public class LosslessStegano
             upperR.R -= base4.Ones;
         }
         #endregion
-
-        lower[index * 2] = upperL;
-        lower[index * 2 + 1] = upperR;
+        ref Rgba32 lowerL = ref lower[index * 2];
+        ref Rgba32 lowerR = ref lower[index * 2 + 1];
+        lowerL = upperL;
+        lowerR = upperR;
     }
     private static byte ReadByteFromChunk(Span<Rgba32> upper, Span<Rgba32> lower, int index)
     {
@@ -119,7 +120,7 @@ public class LosslessStegano
         rows = msg.Length / columns;
         img.ProcessPixelRows(accessor =>
         {
-            for (var row = 0; row < rows; row++)
+            for (var row = 0; row < rows; row += 2)
             {
                 for (var col = 0; col < columns && row + col < msg.Length; col++)
                 {
@@ -140,11 +141,11 @@ public class LosslessStegano
         }
         var columns = img.Width / 2;
         var rows = img.Height / 2;
-        var expectedLength = Int32.MaxValue;
+        var expectedLength = 4;
         var lengthBuffer = new byte[4];
         img.ProcessPixelRows(accessor =>
         {
-            for (var row = 0; row < rows; row++)
+            for (var row = 0; row < rows; row += 2)
             {
                 for (var col = 0; col < columns && row + col < expectedLength; col++)
                 {
@@ -155,11 +156,11 @@ public class LosslessStegano
                     {
                         lengthBuffer[row + col] = val;
                     }
-                    else if (row + col == 4)
+                    if (row + col == 3)
                     {
                         expectedLength = BitConverter.ToInt32(lengthBuffer, 0) + 4; // +4 because we've already read the first 4 bytes marking the length
                     }
-                    else
+                    else if (row + col > 3)
                     {
                         output.WriteByte(val);
                     }
