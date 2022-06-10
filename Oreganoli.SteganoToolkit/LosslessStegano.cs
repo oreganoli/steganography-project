@@ -131,4 +131,40 @@ public class LosslessStegano
         });
         img.Save(output, format);
     }
+    public static void Decode(Stream input, Stream output)
+    {
+        var img = Image.Load<Rgba32>(input, out var format);
+        if (format.Name == "JPEG" || format.Name == "GIF")
+        {
+            throw new UnsupportedImageFormatException(format.Name);
+        }
+        var columns = img.Width / 2;
+        var rows = img.Height / 2;
+        var expectedLength = Int32.MaxValue;
+        var lengthBuffer = new byte[4];
+        img.ProcessPixelRows(accessor =>
+        {
+            for (var row = 0; row < rows; row++)
+            {
+                for (var col = 0; col < columns && row + col < expectedLength; col++)
+                {
+                    var upper = accessor.GetRowSpan(row);
+                    var lower = accessor.GetRowSpan(row + 1);
+                    var val = ReadByteFromChunk(upper, lower, col);
+                    if (row + col < 4)
+                    {
+                        lengthBuffer[row + col] = val;
+                    }
+                    else if (row + col == 4)
+                    {
+                        expectedLength = BitConverter.ToInt32(lengthBuffer, 0) + 4; // +4 because we've already read the first 4 bytes marking the length
+                    }
+                    else
+                    {
+                        output.WriteByte(val);
+                    }
+                }
+            }
+        });
+    }
 }
