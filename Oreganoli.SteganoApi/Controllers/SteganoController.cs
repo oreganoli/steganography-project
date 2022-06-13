@@ -22,11 +22,11 @@ public class SteganoController : ControllerBase
         var format = Image.DetectFormat(imageStream);
         if (format.Name == "JPEG")
         {
+            Response.ContentType = MediaTypeNames.Image.Jpeg;
             JpegStegano
             .Encode(imageStream,
             Response.BodyWriter.AsStream(),
             Encoding.UTF8.GetBytes(message));
-            Response.ContentType = MediaTypeNames.Image.Jpeg;
         }
         else if (format.Name == "GIF")
         {
@@ -34,11 +34,11 @@ public class SteganoController : ControllerBase
         }
         else
         {
+            Response.ContentType = format.DefaultMimeType;
             LosslessStegano
             .Encode(imageStream,
             Response.BodyWriter.AsStream(),
             Encoding.UTF8.GetBytes(message), out var fmt);
-            Response.ContentType = fmt.DefaultMimeType;
         }
         return Ok();
     }
