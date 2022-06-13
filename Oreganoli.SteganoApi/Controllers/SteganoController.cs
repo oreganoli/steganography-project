@@ -9,6 +9,32 @@ using SixLabors.ImageSharp;
 [Route("[controller]")]
 public class SteganoController : ControllerBase
 {
+    private string Decrypt(string key, byte[] message)
+    {
+        var keyBytes = Encoding.UTF8.GetBytes(key);
+        var output = new byte[];
+        if (keyBytes.Length > 32)
+        {
+            keyBytes = keyBytes.Take(32).ToArray();
+        }
+        else if (keyBytes.Length < 32)
+        {
+            keyBytes = keyBytes.Concat(Enumerable.Repeat<byte>(0, 32 - keyBytes.Length)).ToArray();
+        }
+
+        using (var crypto = Aes.Create())
+        {
+            crypto.Key = keyBytes;
+            using (var decryptor = crypto.CreateDecryptor())
+            using (var memStream = new MemoryStream(message))
+            using (var crStream = new CryptoStream(memStream, decryptor, CryptoStreamMode.Read))
+            using (var memOutStream = new MemoryStream())
+            {
+                crStream.CopyTo(memOutStream);
+                return Encoding.UTF8.GetString(memOutStream.ToArray());
+            }
+        }
+    }
     private byte[] Encrypt(string key, string message)
     {
         var inputBytes = Encoding.UTF8.GetBytes(message);
@@ -87,7 +113,7 @@ public class SteganoController : ControllerBase
             throw new ArgumentNullException("message", "No message was provided.");
         }
         message = crypto.CreateEncryptor()
-    }
+        }
 
     [HttpPost]
     [Route("decode")]
