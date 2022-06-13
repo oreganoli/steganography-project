@@ -117,16 +117,22 @@ public class LosslessStegano
             throw new ImageTooSmallException(message.Length, img.Width);
         }
         columns = Math.Min(img.Width / 2, msg.Length);
-        rows = msg.Length / columns;
+        rows = (int)Math.Ceiling((float)msg.Length / (float)columns);
         img.ProcessPixelRows(accessor =>
         {
-            for (var row = 0; row < rows; row += 2)
+            var len = 0;
+            for (var row = 0; row < rows; row++)
             {
-                for (var col = 0; col < columns && row + col < msg.Length; col++)
+                for (var col = 0; col < columns; col++)
                 {
-                    var upper = accessor.GetRowSpan(row);
-                    var lower = accessor.GetRowSpan(row + 1);
-                    WriteByteToChunk(upper, lower, col, msg[row + col]);
+                    var upper = accessor.GetRowSpan(row * 2);
+                    var lower = accessor.GetRowSpan(row * 2 + 1);
+                    if (len < msg.Length)
+                    {
+                        //Console.WriteLine($"Writing byte {len + 1}/{msg.Length} to chunk {row},{col}");
+                        WriteByteToChunk(upper, lower, col, msg[len]);
+                        len++;
+                    }
                 }
             }
         });
@@ -145,27 +151,32 @@ public class LosslessStegano
         var lengthBuffer = new byte[4];
         img.ProcessPixelRows(accessor =>
         {
-            for (var row = 0; row < rows; row += 2)
+            var len = 0;
+            for (var row = 0; row < rows; row++)
             {
-                for (var col = 0; col < columns && row + col < expectedLength; col++)
+                for (var col = 0; col < columns && output.Length < expectedLength; col++)
                 {
-                    var upper = accessor.GetRowSpan(row);
-                    var lower = accessor.GetRowSpan(row + 1);
+                    var upper = accessor.GetRowSpan(row * 2);
+                    var lower = accessor.GetRowSpan(row * 2 + 1);
+                    //Console.WriteLine($"Reading byte from chunk {row},{col}");
                     var val = ReadByteFromChunk(upper, lower, col);
-                    if (row + col < 4)
+                    if (len < 4)
                     {
-                        lengthBuffer[row + col] = val;
+                        lengthBuffer[len] = val;
+                        if (len == 3)
+                        {
+                            expectedLength = BitConverter.ToInt32(lengthBuffer, 0);
+                            Console.WriteLine($"Expected length: {expectedLength}");
+                        }
+                        len++;
                     }
-                    if (row + col == 3)
-                    {
-                        expectedLength = BitConverter.ToInt32(lengthBuffer, 0) + 4; // +4 because we've already read the first 4 bytes marking the length
-                    }
-                    else if (row + col > 3)
+                    else
                     {
                         output.WriteByte(val);
                     }
                 }
             }
+            Console.WriteLine(output.Length);
         });
     }
 }
