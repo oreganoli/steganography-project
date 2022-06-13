@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steganography toolkit</title>
+</head>
+
+<body>
+    <form action="/stegano/encode" method="post" enctype="multipart/form-data">
+        <h1>Encode message in picture</h1>
+        <div>
+            <label for="msgInput">Message:</label>
+            <input id="msgInput" name="message" type="text">
+        </div>
+        <div>
+            <label for="imgInput">Picture:</label>
+            <input id="imgInput" name="image" type="file">
+        </div>
+        <button type="submit">Submit</button>
+    </form>
+    <hr>
+    <form action="/stegano/decode" method="post" enctype="multipart/form-data">
+        <h1>Decode message in picture</h1>
+        <div>
+            <label for="imgInput">Picture:</label>
+            <input id="imgInput" name="image" type="file">
+        </div>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+
+</html>
