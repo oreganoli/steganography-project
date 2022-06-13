@@ -43,6 +43,7 @@ namespace backend
             {
                 app.UseHttpsRedirection();
             }
+            app.UseStaticFiles();
 
             app.UseRouting();
 
