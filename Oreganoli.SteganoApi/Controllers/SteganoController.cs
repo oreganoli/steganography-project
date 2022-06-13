@@ -12,7 +12,6 @@ public class SteganoController : ControllerBase
     private string Decrypt(string key, byte[] message)
     {
         var keyBytes = Encoding.UTF8.GetBytes(key);
-        var output = new byte[];
         if (keyBytes.Length > 32)
         {
             keyBytes = keyBytes.Take(32).ToArray();
@@ -99,7 +98,7 @@ public class SteganoController : ControllerBase
     }
     [HttpPost]
     [Route("encode_key")]
-    public IActionResult EncodeWithKey([FromForm] IFormCollection form)
+    public void EncodeWithKey([FromForm] IFormCollection form)
     {
         var key = form["key"];
         if (key == Microsoft.Extensions.Primitives.StringValues.Empty)
@@ -112,8 +111,11 @@ public class SteganoController : ControllerBase
         {
             throw new ArgumentNullException("message", "No message was provided.");
         }
-        message = crypto.CreateEncryptor()
-        }
+        var messageBytes = Encrypt(key, message);
+        var imageFile = form.Files["image"] ?? throw new ArgumentNullException("image", "No image file was provided.");
+        var imageStream = imageFile.OpenReadStream();
+        EncodeMessage(messageBytes, imageStream);
+    }
 
     [HttpPost]
     [Route("decode")]
