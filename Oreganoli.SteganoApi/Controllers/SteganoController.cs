@@ -10,7 +10,7 @@ public class SteganoController : ControllerBase
 {
     [HttpPost]
     [Route("encode")]
-    public IActionResult Encode([FromForm] IFormCollection form)
+    public void Encode([FromForm] IFormCollection form)
     {
         var message = form["message"];
         if (message == Microsoft.Extensions.Primitives.StringValues.Empty)
@@ -40,7 +40,6 @@ public class SteganoController : ControllerBase
             Response.BodyWriter.AsStream(),
             Encoding.UTF8.GetBytes(message), out var fmt);
         }
-        return Ok();
     }
     [HttpPost]
     [Route("encode_key")]
