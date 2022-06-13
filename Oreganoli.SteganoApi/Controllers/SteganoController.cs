@@ -5,6 +5,8 @@ using System.Text;
 using System.Security.Cryptography;
 using Oreganoli.SteganoToolkit;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+
 [ApiController]
 [Route("[controller]")]
 public class SteganoController : ControllerBase
@@ -20,19 +22,19 @@ public class SteganoController : ControllerBase
         {
             keyBytes = keyBytes.Concat(Enumerable.Repeat<byte>(0, 32 - keyBytes.Length)).ToArray();
         }
-
+        byte[] output;
         using (var crypto = Aes.Create())
         {
             crypto.Key = keyBytes;
             using (var decryptor = crypto.CreateDecryptor())
-            using (var memStream = new MemoryStream(message))
-            using (var crStream = new CryptoStream(memStream, decryptor, CryptoStreamMode.Read))
-            using (var memOutStream = new MemoryStream())
+            using (var outStream = new MemoryStream())
+            using (var crStream = new CryptoStream(outStream, decryptor, CryptoStreamMode.Write))
             {
-                crStream.CopyTo(memOutStream);
-                return Encoding.UTF8.GetString(memOutStream.ToArray());
+                crStream.Write(message, 0, message.Length);
+                output = outStream.ToArray();
             }
         }
+        return Encoding.UTF8.GetString(output);
     }
     private byte[] Encrypt(string key, string message)
     {
@@ -51,12 +53,11 @@ public class SteganoController : ControllerBase
         {
             crypto.Key = keyBytes;
             using (var encryptor = crypto.CreateEncryptor())
-            using (var memStream = new MemoryStream(inputBytes))
-            using (var crStream = new CryptoStream(memStream, encryptor, CryptoStreamMode.Write))
-            using (var writer = new StreamWriter(crStream))
+            using (var outStream = new MemoryStream())
+            using (var crStream = new CryptoStream(outStream, encryptor, CryptoStreamMode.Write))
             {
-                writer.Write(message);
-                return memStream.ToArray();
+                crStream.Write(inputBytes, 0, inputBytes.Length);
+                return outStream.ToArray();
             }
         }
     }
@@ -82,6 +83,27 @@ public class SteganoController : ControllerBase
             Response.BodyWriter.AsStream(),
             message, out var _fmt);
         }
+    }
+    private byte[] DecodeMessage(Stream imageStream, out IImageFormat format)
+    {
+        format = Image.DetectFormat(imageStream);
+        var memStream = new MemoryStream();
+        if (format.Name == "JPEG")
+        {
+            Response.ContentType = MediaTypeNames.Image.Jpeg;
+            var msg = JpegStegano.Decode(imageStream);
+            memStream.Write(msg);
+        }
+        else if (format.Name == "GIF")
+        {
+            throw new UnsupportedImageFormatException("GIF");
+        }
+        else
+        {
+            Response.ContentType = MediaTypeNames.Text.Plain;
+            LosslessStegano.Decode(imageStream, memStream);
+        }
+        return memStream.ToArray();
     }
     [HttpPost]
     [Route("encode")]
@@ -123,33 +145,22 @@ public class SteganoController : ControllerBase
     {
         var imageFile = form.Files["image"] ?? throw new ArgumentNullException("image", "No image file was provided.");
         var imageStream = imageFile.OpenReadStream();
-        var format = Image.DetectFormat(imageStream);
-        if (format.Name == "JPEG")
-        {
-            Response.ContentType = MediaTypeNames.Text.Plain;
-            var msg = JpegStegano
-            .Decode(imageStream);
-            Response.BodyWriter.AsStream().Write(msg);
-        }
-        else if (format.Name == "GIF")
-        {
-            throw new UnsupportedImageFormatException("GIF");
-        }
-        else
-        {
-            Response.ContentType = MediaTypeNames.Text.Plain;
-            var mem = new MemoryStream();
-            LosslessStegano
-            .Decode(imageStream, Response.BodyWriter.AsStream());
-            // Console.WriteLine(mem.Length);
-            // mem.CopyTo(Response.BodyWriter.AsStream());
-        }
+        var msg = DecodeMessage(imageStream, out var _format);
+        Response.BodyWriter.AsStream().Write(msg, 0, msg.Length);
     }
 
     [HttpPost]
     [Route("decode_key")]
     public IActionResult DecodeWithKey([FromForm] IFormCollection form)
     {
-        throw new NotImplementedException();
+        var key = form["key"];
+        if (key == Microsoft.Extensions.Primitives.StringValues.Empty)
+        {
+            throw new ArgumentNullException("key", "No encryption key was provided.");
+        }
+        var imageFile = form.Files["image"] ?? throw new ArgumentNullException("image", "No image file was provided.");
+        var imageStream = imageFile.OpenReadStream();
+        var msg = DecodeMessage(imageStream, out var _format);
+        return Ok(Decrypt(key, msg));
     }
 }
