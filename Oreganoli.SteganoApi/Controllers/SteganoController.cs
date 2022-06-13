@@ -50,9 +50,31 @@ public class SteganoController : ControllerBase
 
     [HttpPost]
     [Route("decode")]
-    public IActionResult Decode([FromForm] IFormCollection form)
+    public void Decode([FromForm] IFormCollection form)
     {
-        throw new NotImplementedException();
+        var imageFile = form.Files["image"] ?? throw new ArgumentNullException("image", "No image file was provided.");
+        var imageStream = imageFile.OpenReadStream();
+        var format = Image.DetectFormat(imageStream);
+        if (format.Name == "JPEG")
+        {
+            Response.ContentType = MediaTypeNames.Text.Plain;
+            var msg = JpegStegano
+            .Decode(imageStream);
+            Response.BodyWriter.AsStream().Write(msg);
+        }
+        else if (format.Name == "GIF")
+        {
+            throw new UnsupportedImageFormatException("GIF");
+        }
+        else
+        {
+            Response.ContentType = MediaTypeNames.Text.Plain;
+            var mem = new MemoryStream();
+            LosslessStegano
+            .Decode(imageStream, Response.BodyWriter.AsStream());
+            // Console.WriteLine(mem.Length);
+            // mem.CopyTo(Response.BodyWriter.AsStream());
+        }
     }
 
     [HttpPost]

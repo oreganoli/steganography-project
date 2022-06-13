@@ -154,7 +154,7 @@ public class LosslessStegano
             var len = 0;
             for (var row = 0; row < rows; row++)
             {
-                for (var col = 0; col < columns && output.Length < expectedLength; col++)
+                for (var col = 0; col < columns && len < expectedLength; col++)
                 {
                     var upper = accessor.GetRowSpan(row * 2);
                     var lower = accessor.GetRowSpan(row * 2 + 1);
@@ -165,7 +165,7 @@ public class LosslessStegano
                         lengthBuffer[len] = val;
                         if (len == 3)
                         {
-                            expectedLength = BitConverter.ToInt32(lengthBuffer, 0);
+                            expectedLength = BitConverter.ToInt32(lengthBuffer, 0) + 4;
                             Console.WriteLine($"Expected length: {expectedLength}");
                         }
                         len++;
@@ -173,10 +173,11 @@ public class LosslessStegano
                     else
                     {
                         output.WriteByte(val);
+                        len++;
                     }
                 }
             }
-            Console.WriteLine(output.Length);
+            output.Flush();
         });
     }
 }
