@@ -7,5 +7,6 @@ Homework project for cryptography classes at university.
 - Encode messages in any losslessly-compressed image format by encoding their bytes as base-four numbers represented by pixel color differences
 - Decode so hidden messages
 
-## Web GUI screenshot
-![screenshot](Screenshot.png)
+## Web GUI screenshots
+![screenshot](screen1.png)
+![screenshot](screen2.png)
