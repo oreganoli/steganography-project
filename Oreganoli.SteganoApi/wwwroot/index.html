@@ -4,32 +4,56 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Steganography toolkit</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css"
+        integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js"
+        integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
+        crossorigin="anonymous"></script>
 </head>
 
 <body>
-    <form action="/stegano/encode" method="post" enctype="multipart/form-data">
-        <h1>Encode message in picture</h1>
-        <div>
-            <label for="msgInput">Message:</label>
-            <input id="msgInput" name="message" type="text">
+    <style>
+        img {
+            max-width: 75%;
+            max-height: 50vh;
+        }
+    </style>
+    <div class="container-fluid">
+        <div class="col-md-6">
+            <form id="encodeForm" class="form-group" action="/stegano/encode" method="post"
+                enctype="multipart/form-data">
+                <h2>Encode message in picture</h2>
+                <div>
+                    <label for="msgInput">Message:</label>
+                    <input class="form-control" id="msgInput" name="message" type="text">
+                </div>
+                <div>
+                    <label for="imgInput">Picture:</label>
+                    <input class="form-control" id="imgInput" name="image" type="file">
+                </div>
+                <hr>
+                <button class="btn btn-primary align-middle" type="submit">Submit</button>
+            </form>
+            <hr>
+            <form id="decodeForm" class="form-group" action="/stegano/decode" method="post"
+                enctype="multipart/form-data">
+                <h2>Decode message in picture</h2>
+                <div>
+                    <label for="imgInput">Picture:</label>
+                    <input class="form-control" id="imgInput" name="image" type="file">
+                </div>
+                <hr>
+                <button class="btn btn-primary align-middle" type="submit">Submit</button>
+            </form>
         </div>
-        <div>
-            <label for="imgInput">Picture:</label>
-            <input id="imgInput" name="image" type="file">
+        <div class="col-md-6">
+            <h2>Output</h2>
+            <div id="output"></div>
         </div>
-        <button type="submit">Submit</button>
-    </form>
-    <hr>
-    <form action="/stegano/decode" method="post" enctype="multipart/form-data">
-        <h1>Decode message in picture</h1>
-        <div>
-            <label for="imgInput">Picture:</label>
-            <input id="imgInput" name="image" type="file">
-        </div>
-        <button type="submit">Submit</button>
-    </form>
+    </div>
 </body>
+<script src="index.js"></script>
 
 </html>
