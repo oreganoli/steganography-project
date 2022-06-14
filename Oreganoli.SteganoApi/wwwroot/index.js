@@ -12,17 +12,18 @@ async function encodeFormOnSubmit(e) {
     })
     if (response.ok) {
         let imgBlob = await response.blob();
-        console.log(response.type);
-        console.log(imgBlob.size);
-        console.log(imgBlob.type)
-        console.log(URL.createObjectURL(imgBlob));
-        const reader = new FileReader();
-        reader.onloadend = function () {
-            outputDiv.replaceChildren(document.createElement("img", {
-                src: reader.result
-            }));
-        };
-        reader.readAsDataURL(imgBlob);
+        // console.log(response.type);
+        // console.log(imgBlob.size);
+        // console.log(imgBlob.type)
+        var imgUrl = URL.createObjectURL(imgBlob);
+        let img = document.createElement("img");
+        img.classList.add("w-75");
+        img.classList.add("img-fluid");
+        img.classList.add("border");
+        img.classList.add("border-success");
+        img.classList.add("rounded");
+        img.src = imgUrl;
+        outputDiv.replaceChildren(img);
 
     } else {
         response.text().then(text => {
