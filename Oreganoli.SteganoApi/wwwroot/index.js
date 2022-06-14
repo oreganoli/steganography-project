@@ -1,4 +1,5 @@
 var encodeForm = document.getElementById("encodeForm");
+var decodeForm = document.getElementById("decodeForm");
 var outputDiv = document.getElementById("output");
 /**
  * 
@@ -31,4 +32,28 @@ async function encodeFormOnSubmit(e) {
         });
     }
 }
+/**
+ * 
+ * @param {SubmitEvent} e 
+ */
+async function decodeFormOnSubmit(e) {
+    e.preventDefault();
+    let response = await fetch("/stegano/decode", {
+        body: new FormData(e.target),
+        method: "post"
+    })
+    if (response.ok) {
+        let text = await response.text();
+        let p = document.createElement("p");
+        p.innerText = text;
+        p.classList.add("alert");
+        p.classList.add("alert-success");
+        outputDiv.replaceChildren(p);
+    } else {
+        response.text().then(text => {
+            outputDiv.replaceChildren(document.createElement("h2", `Error: ${text}`));
+        });
+    }
+}
 encodeForm.onsubmit = encodeFormOnSubmit;
+decodeForm.onsubmit = decodeFormOnSubmit;
